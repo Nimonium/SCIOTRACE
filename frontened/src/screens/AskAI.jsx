@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquareText, Send, Loader2, Bot } from 'lucide-react';
 import { api } from '../api';
@@ -61,6 +62,34 @@ export default function AskAI() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-trigger query if query param 'q' is passed from search bar
+  useEffect(() => {
+    const qParam = searchParams.get('q');
+    if (qParam && qParam.trim()) {
+      const userQuery = qParam.trim();
+      setSearchParams({}, { replace: true });
+      setMessages(prev => [...prev, { role: 'user', content: userQuery }]);
+      setLoading(true);
+      api.askAi(userQuery)
+        .then(response => {
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: response.answer || 'Analysis complete.',
+            evidence: response.evidence || null
+          }]);
+        })
+        .catch(err => {
+          console.error('Error asking AI:', err);
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: "I'm currently unable to reach the analysis engine. Please try again later."
+          }]);
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [searchParams]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

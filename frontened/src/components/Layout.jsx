@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Radar, Activity, Network, MessageSquareText, Layers, Bell, 
-  Users, PieChart, Settings, Radio, Circle, ExternalLink, AlertTriangle 
+  Users, PieChart, Settings, Radio, Search, X, CornerDownLeft, 
+  ExternalLink, ArrowRight, TrendingUp, ShieldAlert, Sparkles 
 } from 'lucide-react';
 import { api } from '../api';
 import AmbientBackground from './background/AmbientBackground';
@@ -31,6 +32,13 @@ export function Layout() {
   const [alerts, setAlerts] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const notifRef = useRef(null);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [narrativesList, setNarrativesList] = useState([]);
+  const searchRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     async function checkHealth() {
@@ -63,23 +71,77 @@ export function Layout() {
     return () => clearInterval(timer);
   }, []);
 
-  // Close notifications dropdown on outside click
+  // Fetch narratives for instant search indexing
+  useEffect(() => {
+    async function loadNarratives() {
+      try {
+        const res = await api.getNarratives();
+        setNarrativesList(res?.narratives || []);
+      } catch (e) {
+        console.warn('Could not load narratives for search:', e);
+      }
+    }
+    loadNarratives();
+  }, []);
+
+  // Global Ctrl+K / Cmd+K shortcut to focus search
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        setSearchOpen(true);
+      }
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+        setNotifOpen(false);
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Close notifications and search on outside click
   useEffect(() => {
     function handleClickOutside(e) {
       if (notifRef.current && !notifRef.current.contains(e.target)) {
         setNotifOpen(false);
       }
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSearchOpen(false);
+      }
     }
-    if (notifOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [notifOpen]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  const pageLabel =
-    location.pathname === '/'
-      ? 'Overview'
-      : location.pathname.split('/')[1].replace(/-/g, ' ');
+  // Filtered search results
+  const filteredResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return narrativesList.filter(n => 
+      n.topic?.toLowerCase().includes(q) ||
+      n.id?.toLowerCase().includes(q) ||
+      n.sentiment?.toLowerCase().includes(q) ||
+      n.momentum_state?.toLowerCase().includes(q) ||
+      n.spread_path?.some(p => p.toLowerCase().includes(q))
+    );
+  }, [searchQuery, narrativesList]);
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    if (filteredResults.length > 0) {
+      // Navigate to top matched narrative
+      navigate(`/narratives/${filteredResults[0].id}`);
+    } else {
+      // Forward query to Ask AI copilot
+      navigate(`/ask?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+    setSearchOpen(false);
+    setSearchQuery('');
+  };
 
   const isConnected = status === 'Connected';
 
@@ -159,20 +221,124 @@ export function Layout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         {/* Top bar */}
         <header className="topbar-glass h-16 flex-shrink-0 flex items-center justify-between px-8 relative z-30">
-          {/* Search */}
-          <div className="relative flex-1 max-w-sm">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-              width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2"
-            >
-              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search narratives, topics, communities..."
-              className="w-full bg-white/5 border border-white/8 rounded-xl pl-9 pr-4 py-2 text-sm text-ink placeholder-muted/50 focus:outline-none focus:border-violet/50 focus:bg-white/8 transition-all"
-            />
+          {/* Interactive Search Bar */}
+          <div className="relative flex-1 max-w-md" ref={searchRef}>
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <Search
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
+                size={14}
+              />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSearchOpen(true);
+                }}
+                onFocus={() => setSearchOpen(true)}
+                placeholder="Search narratives, topics, claims... (Ctrl + K)"
+                className="w-full bg-white/5 border border-white/8 rounded-xl pl-9 pr-20 py-2 text-sm text-ink placeholder-muted/50 focus:outline-none focus:border-violet/50 focus:bg-white/8 transition-all"
+              />
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      searchInputRef.current?.focus();
+                    }}
+                    className="p-1 rounded-md text-muted hover:text-ink hover:bg-white/8 transition-colors"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-muted/60 bg-white/6 rounded border border-white/8">
+                  Ctrl K
+                </kbd>
+              </div>
+            </form>
+
+            {/* Instant Search Dropdown Results */}
+            <AnimatePresence>
+              {searchOpen && searchQuery.trim().length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 right-0 mt-2 rounded-2xl bg-panel/95 backdrop-blur-2xl border border-white/12 shadow-2xl shadow-black/70 z-50 overflow-hidden"
+                >
+                  {/* Results Section */}
+                  {filteredResults.length > 0 ? (
+                    <div className="p-2 space-y-1">
+                      <div className="px-3 py-1.5 text-[10px] font-bold text-muted uppercase tracking-wider flex items-center justify-between">
+                        <span>Matched Narratives</span>
+                        <span>{filteredResults.length} found</span>
+                      </div>
+                      {filteredResults.map((n) => {
+                        const isViral = n.momentum_state === 'viral' || n.momentum >= 80;
+                        return (
+                          <div
+                            key={n.id}
+                            onClick={() => {
+                              navigate(`/narratives/${n.id}`);
+                              setSearchOpen(false);
+                              setSearchQuery('');
+                            }}
+                            className="p-3 rounded-xl hover:bg-white/8 cursor-pointer transition-all flex items-center justify-between gap-3 group"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                                  isViral ? 'bg-coral/15 text-coral border border-coral/30' : 'bg-cyan/15 text-cyan border border-cyan/30'
+                                }`}>
+                                  {n.momentum_state || 'active'}
+                                </span>
+                                <span className="text-[10px] text-muted font-mono">
+                                  Score: {n.momentum}/100
+                                </span>
+                              </div>
+                              <p className="text-xs font-semibold text-ink truncate group-hover:text-cyan transition-colors">
+                                {n.topic}
+                              </p>
+                              {n.spread_path && (
+                                <p className="text-[10px] text-muted/70 mt-0.5 capitalize">
+                                  Spread: {n.spread_path.join(' → ')}
+                                </p>
+                              )}
+                            </div>
+                            <ArrowRight size={14} className="text-muted group-hover:text-cyan group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-xs text-muted">
+                      No narrative title strictly matching <span className="text-ink font-semibold">"{searchQuery}"</span>
+                    </div>
+                  )}
+
+                  {/* Ask AI Action Footer */}
+                  <div className="p-2 border-t border-white/8 bg-white/3">
+                    <button
+                      type="button"
+                      onClick={() => handleSearchSubmit()}
+                      className="w-full p-2.5 rounded-xl bg-violet/15 hover:bg-violet/25 text-lavender hover:text-white border border-violet/30 text-xs font-semibold flex items-center justify-between gap-2 transition-all group"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Sparkles size={14} className="text-violet flex-shrink-0" />
+                        <span className="truncate">Ask AI Copilot: <span className="text-ink font-normal italic">"{searchQuery}"</span></span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-muted bg-white/6 px-1.5 py-0.5 rounded border border-white/8">
+                        <span>Enter</span>
+                        <CornerDownLeft size={10} />
+                      </div>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Right cluster */}
@@ -180,9 +346,7 @@ export function Layout() {
             {/* Notification Bell with Dropdown */}
             <div className="relative" ref={notifRef}>
               <button
-                onClick={() => {
-                  setNotifOpen(prev => !prev);
-                }}
+                onClick={() => setNotifOpen(prev => !prev)}
                 className={`relative w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
                   notifOpen
                     ? 'bg-violet/20 border-violet/50 text-violet shadow-lg shadow-violet/20'
@@ -244,7 +408,7 @@ export function Layout() {
                               key={idx}
                               onClick={() => {
                                 setNotifOpen(false);
-                                navigate('/alerts');
+                                navigate(alert.narrative_id ? `/narratives/${alert.narrative_id}` : '/alerts');
                               }}
                               className="p-3 rounded-xl hover:bg-white/6 cursor-pointer transition-all flex flex-col gap-1.5 group"
                             >
