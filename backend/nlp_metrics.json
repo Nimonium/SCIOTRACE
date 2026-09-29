@@ -1,9 +1,9 @@
 {
-  "gemini_calls_real": 160,
-  "gemini_calls_emulated": 406,
-  "gemini_calls_today": 566,
-  "gemini_calls_saved_by_local_model": 3143,
-  "estimated_gemini_tokens_used": 191500,
-  "local_classifications_count": 3143,
-  "total_posts_analyzed": 3709
+  "gemini_calls_real": 10,
+  "gemini_calls_emulated": 0,
+  "gemini_calls_today": 10,
+  "gemini_calls_saved_by_local_model": 130,
+  "estimated_gemini_tokens_used": 4476,
+  "local_classifications_count": 130,
+  "total_posts_analyzed": 140
 }
