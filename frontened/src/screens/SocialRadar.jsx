@@ -30,7 +30,7 @@ export default function SocialRadar() {
         ]);
         
         if (!alertsData && !narrativesData) {
-          setError("Unable to reach Social Pulse backend. Please verify the backend is running.");
+          setError("Unable to reach SCIOTRACE backend. Please verify the backend is running.");
         }
 
         const rawAlerts = alertsData?.alerts || (Array.isArray(alertsData) ? alertsData : []);
@@ -40,7 +40,7 @@ export default function SocialRadar() {
         setNarratives(rawNarratives);
       } catch (err) {
         console.error("Error fetching radar data:", err);
-        setError("Unable to reach Social Pulse backend. Please verify the backend is running.");
+        setError("Unable to reach SCIOTRACE backend. Please verify the backend is running.");
       } finally {
         setLoading(false);
       }
@@ -171,7 +171,7 @@ export default function SocialRadar() {
             transition={{ delay: 0.2 }}
             className="text-lg text-muted max-w-lg leading-relaxed"
           >
-            Social Pulse AI transforms social conversations into real-time narrative intelligence.
+            SCIOTRACE transforms social conversations into real-time narrative intelligence.
           </motion.p>
 
           <motion.div 
@@ -192,7 +192,7 @@ export default function SocialRadar() {
               className="flex items-center gap-2 bg-panel border border-border text-ink font-bold px-6 py-3 rounded-lg hover:bg-elevated hover:border-violet/50 transition-all duration-300"
             >
               <MessageSquareText size={18} className="text-violet" />
-              Ask Social Pulse
+              Ask SCIOTRACE
             </button>
           </motion.div>
         </div>
@@ -209,7 +209,7 @@ export default function SocialRadar() {
              
              <div className="flex items-center justify-between mb-8 relative z-10">
                <div>
-                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted mb-1">Social Pulse Index</h4>
+                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted mb-1">SCIOTRACE Index</h4>
                  <div className="flex items-end gap-3">
                    <span className="text-5xl font-black text-ink">{socialTemp}</span>
                    <span className="text-emerald text-sm font-bold flex items-center mb-1"><TrendingUp size={14} className="mr-1"/> +12%</span>

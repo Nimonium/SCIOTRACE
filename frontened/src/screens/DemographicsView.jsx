@@ -25,7 +25,7 @@ export default function DemographicsView() {
       })
       .catch(err => {
         console.error("Error fetching narratives in demographics:", err);
-        setError("Unable to reach Social Pulse backend. Please check connection.");
+        setError("Unable to reach SCIOTRACE backend. Please check connection.");
         setLoading(false);
       });
   }, []);
@@ -87,7 +87,7 @@ export default function DemographicsView() {
       <div className="bg-emerald/10 border border-emerald/20 text-emerald p-4 rounded-lg flex items-start gap-3">
         <ShieldCheck size={20} className="mt-0.5 flex-shrink-0" />
         <div className="text-sm">
-          <strong className="font-bold">Privacy Notice:</strong> All demographic data is strictly aggregate-only. Social Pulse AI does not track, infer, or display individual-level demographic information.
+          <strong className="font-bold">Privacy Notice:</strong> All demographic data is strictly aggregate-only. SCIOTRACE does not track, infer, or display individual-level demographic information.
         </div>
       </div>
 

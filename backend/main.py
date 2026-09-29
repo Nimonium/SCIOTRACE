@@ -1,5 +1,5 @@
 """
-Social Pulse AI - FastAPI Backend Application
+SCIOTRACE - FastAPI Backend Application
 NTRO Problem Statement 26152 (Social Media Analytics)
 
 Fixed REST API providing ingestion, NLP emotion/sentiment intelligence,
@@ -53,7 +53,7 @@ async def lifespan(app: FastAPI):
         logger.info("Initializing fresh database with high-fidelity seed narratives...")
         load_seed_data()
         batch_classify_and_update()
-        logger.info("Social Pulse AI initialized and ready.")
+        logger.info("SCIOTRACE initialized and ready.")
     else:
         logger.info(f"Loaded existing database with {len(existing)} events.")
     yield
@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
 
 # Initialize FastAPI application
 app = FastAPI(
-    title="Social Pulse AI - Intelligence Backend",
+    title="SCIOTRACE - Intelligence Backend",
     description="Social media narrative intelligence, momentum forecasting, graph analytics, and Q&A engine.",
     version="1.0.0",
     lifespan=lifespan
@@ -108,7 +108,7 @@ def health_check():
     """Health check endpoint for status validation."""
     return {
         "status": "healthy",
-        "service": "Social Pulse AI Backend",
+        "service": "SCIOTRACE Backend",
         "version": "1.0.0"
     }
 

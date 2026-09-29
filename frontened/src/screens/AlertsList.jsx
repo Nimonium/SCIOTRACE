@@ -18,7 +18,7 @@ export default function AlertsList() {
       })
       .catch(err => {
         console.error("Error fetching alerts:", err);
-        setError("Unable to reach Social Pulse backend. Please check connection.");
+        setError("Unable to reach SCIOTRACE backend. Please check connection.");
         setAlerts([]);
       })
       .finally(() => setLoading(false));

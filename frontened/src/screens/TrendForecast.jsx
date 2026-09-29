@@ -22,7 +22,7 @@ export default function TrendForecast() {
           return null;
         });
         if (!data) {
-          setError("Unable to reach Social Pulse backend. Please check connection.");
+          setError("Unable to reach SCIOTRACE backend. Please check connection.");
           setTrends([]);
         } else {
           const list = data?.trends || (Array.isArray(data) ? data : []);
@@ -30,7 +30,7 @@ export default function TrendForecast() {
         }
       } catch (err) {
         console.error("Error in trend forecast screen:", err);
-        setError("Unable to reach Social Pulse backend.");
+        setError("Unable to reach SCIOTRACE backend.");
       } finally {
         setLoading(false);
       }

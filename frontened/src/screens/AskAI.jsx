@@ -35,7 +35,7 @@ function ChatMessage({ msg }) {
         {!isUser && (
           <div className="flex items-center gap-2 mb-3 text-violet border-b border-border/30 pb-2">
             <Bot size={16} />
-            <span className="text-[10px] uppercase tracking-wider font-bold">Social Pulse AI</span>
+            <span className="text-[10px] uppercase tracking-wider font-bold">SCIOTRACE</span>
           </div>
         )}
         
@@ -55,7 +55,7 @@ export default function AskAI() {
   const [messages, setMessages] = useState([
     { 
       role: 'assistant', 
-      content: 'Hello. I am Social Pulse AI. Ask me to analyze narratives, investigate network structures, or forecast trends.' 
+      content: 'Hello. I am SCIOTRACE. Ask me to analyze narratives, investigate network structures, or forecast trends.' 
     }
   ]);
   const [input, setInput] = useState('');
@@ -103,7 +103,7 @@ export default function AskAI() {
       <header className="flex items-center gap-3 mb-4 flex-shrink-0 border-b border-border/50 pb-4">
         <MessageSquareText className="text-violet" size={28} />
         <div>
-          <h2 className="text-2xl font-bold tracking-tight leading-none text-ink">Ask Social Pulse AI</h2>
+          <h2 className="text-2xl font-bold tracking-tight leading-none text-ink">Ask SCIOTRACE</h2>
           <p className="text-xs uppercase tracking-wider text-muted mt-1">Investigative Chat</p>
         </div>
       </header>

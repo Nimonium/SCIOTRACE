@@ -60,7 +60,7 @@ export function Layout() {
             <div className="w-8 h-8 rounded-lg bg-violet/20 border border-violet/30 flex items-center justify-center flex-shrink-0">
               <Radio size={16} className="text-violet" />
             </div>
-            <span className="text-base font-extrabold tracking-tight text-ink">Social Pulse AI</span>
+            <span className="text-base font-extrabold tracking-tight text-ink">SCIOTRACE</span>
           </div>
           <p className="text-[10px] text-muted/70 tracking-wide pl-11">
             Understand what the internet is saying.

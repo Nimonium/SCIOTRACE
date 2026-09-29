@@ -35,7 +35,7 @@ export default function CommunitiesView() {
       })
       .catch(err => {
         console.error("Error fetching narratives in communities view:", err);
-        setError("Unable to reach Social Pulse backend. Please check connection.");
+        setError("Unable to reach SCIOTRACE backend. Please check connection.");
         setLoading(false);
       });
   }, []);

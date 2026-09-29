@@ -18,7 +18,7 @@ export default function NarrativesList() {
       })
       .catch(err => {
         console.error("Error fetching narratives:", err);
-        setError("Unable to reach Social Pulse backend. Please check connection.");
+        setError("Unable to reach SCIOTRACE backend. Please check connection.");
         setNarratives([]);
       })
       .finally(() => setLoading(false));

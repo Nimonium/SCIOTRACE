@@ -1,5 +1,5 @@
 """
-Natural Language Q&A / Ask Service module for Social Pulse AI.
+Natural Language Q&A / Ask Service module for SCIOTRACE.
 Interprets user questions about social media narratives, correlates structured intelligence facts,
 uses Gemini LLM (with robust heuristic fallback) to generate plain-English answers with supporting evidence cues.
 """
@@ -134,7 +134,7 @@ def answer_query(query: str) -> Dict[str, Any]:
 
     # Use Gemini with strict grounding
     prompt = f"""
-You are Social Pulse AI's intelligence analyst backend.
+You are SCIOTRACE's intelligence analyst backend.
 Answer the user's inquiry accurately, concisely, and in plain English based ONLY on the structured narrative intelligence facts provided below.
 
 FACTS:

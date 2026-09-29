@@ -1,6 +1,6 @@
 """
 label_tool.py
-Interactive Blind Labeling Tool for Social Pulse AI NLP Layer Evaluation.
+Interactive Blind Labeling Tool for SCIOTRACE NLP Layer Evaluation.
 Runs directly in the terminal with zero external dependencies.
 
 Features:

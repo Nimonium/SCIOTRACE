@@ -97,7 +97,7 @@ export default function SettingsView() {
           </div>
 
           <p className="text-sm text-muted mb-6">
-            Social Pulse AI uses a 3-tier hybrid pipeline. Clean, high-confidence posts are classified locally at 0 cost via VADER and lexicon rules. Ambiguous sentiment, sarcasm, and complex policy mutations escalate to Gemini with intelligent batching.
+            SCIOTRACE uses a 3-tier hybrid pipeline. Clean, high-confidence posts are classified locally at 0 cost via VADER and lexicon rules. Ambiguous sentiment, sarcasm, and complex policy mutations escalate to Gemini with intelligent batching.
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
