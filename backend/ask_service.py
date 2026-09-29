@@ -102,6 +102,31 @@ def answer_query(query: str) -> Dict[str, Any]:
     Processes a natural language query against backend intelligence data.
     Returns: { "answer": str, "evidence": { "narrative_id": str, "show": List[str] }, "confidence": float }
     """
+    q_clean = query.strip().lower()
+    
+    # 1. Handle Greetings & Conversational Queries
+    greetings = ["hello", "hi", "hey", "hola", "greetings", "good morning", "good evening", "good afternoon"]
+    if q_clean in greetings or any(q_clean.startswith(g + " ") or q_clean.startswith(g + "!") or q_clean.startswith(g + ",") for g in greetings):
+        return {
+            "answer": "Hello! I am SCIOTRACE, your cognitive social intelligence copilot. I track how narratives originate, mutate, and spread across online platforms.\n\nHere are some questions you can ask me:\n• \"Who started the fee hike narrative and why is it going viral?\"\n• \"What are the mutation stages of the biometric metro pilot?\"\n• \"Which narratives currently have the highest breakout risk?\"\n• \"Show me the bridge actors connecting the tariff surcharge communities.\"",
+            "evidence": {
+                "narrative_id": "narrative-policy-fee-hike",
+                "show": ["timeline", "network"]
+            },
+            "confidence": 1.0
+        }
+
+    # 2. Handle Capabilities Queries
+    if any(k in q_clean for k in ["what can you do", "who are you", "what is sciotrace", "help", "how do you work"]):
+        return {
+            "answer": "SCIOTRACE is an AI-powered situational awareness platform designed to trace how viral claims emerge, mutate, and spread across Telegram, X, and Reddit.\n\nKey capabilities:\n1. Origin & DNA tracking (first seen timestamps, author vectors, core claims)\n2. Louvain topological graph roles (Originators, Bridges, Authorities, Amplifiers)\n3. Cross-platform semantic mutations and reframing\n4. Early signal alerts and social temperature velocity\n\nAsk about any active narrative or topic to see an executive briefing with grounded graph and timeline evidence!",
+            "evidence": {
+                "narrative_id": "narrative-policy-fee-hike",
+                "show": ["dna", "network"]
+            },
+            "confidence": 1.0
+        }
+
     narrative_id = detect_target_narrative(query)
     evidence_screens = detect_evidence_screens(query, narrative_id)
     
@@ -132,7 +157,7 @@ def answer_query(query: str) -> Dict[str, Any]:
             "confidence": 0.94
         }
 
-    # Use Gemini with strict grounding
+    # Use Gemini with strict grounding and multi-model availability fallback
     prompt = f"""
 You are SCIOTRACE's intelligence analyst backend.
 Answer the user's inquiry accurately, concisely, and in plain English based ONLY on the structured narrative intelligence facts provided below.
@@ -154,28 +179,36 @@ USER QUERY:
 INSTRUCTIONS:
 Provide a crisp, direct, executive 2-4 sentence situational briefing answer.
 """
-    try:
-        response = client.models.generate_content(
-            model='gemini-3.5-flash',
-            contents=prompt,
-        )
-        answer_text = response.text.strip()
-        return {
-            "answer": answer_text,
-            "evidence": {
-                "narrative_id": narrative_id,
-                "show": evidence_screens
-            },
-            "confidence": 0.95
-        }
-    except Exception as e:
-        logger.warning(f"Gemini Q&A generation failed: {e}. Using rule-based synthesizer.")
-        answer = _synthesize_answer_rule_based(query, narrative_id, context)
-        return {
-            "answer": answer,
-            "evidence": {
-                "narrative_id": narrative_id,
-                "show": evidence_screens
-            },
-            "confidence": 0.92
-        }
+    # Candidate models in priority order: gemini-3.8-flash, then gemini-3.6-flash
+    for model_name in ['gemini-3.8-flash', 'gemini-3.6-flash']:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+            if response and response.text:
+                return {
+                    "answer": response.text.strip(),
+                    "evidence": {
+                        "narrative_id": narrative_id,
+                        "show": evidence_screens
+                    },
+                    "confidence": 0.95
+                }
+        except Exception as e:
+            err_msg = str(e)
+            logger.warning(f"Gemini Q&A with {model_name} failed ({err_msg}). Trying fallback...")
+            if "503" in err_msg or "UNAVAILABLE" in err_msg:
+                continue
+            break
+
+    # If all API calls fail, gracefully use the rule-based synthesizer
+    answer = _synthesize_answer_rule_based(query, narrative_id, context)
+    return {
+        "answer": answer,
+        "evidence": {
+            "narrative_id": narrative_id,
+            "show": evidence_screens
+        },
+        "confidence": 0.92
+    }
