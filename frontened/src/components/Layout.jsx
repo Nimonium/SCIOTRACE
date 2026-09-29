@@ -136,28 +136,7 @@ export function Layout() {
           </div>
 
           {/* Right cluster */}
-          <div className="flex items-center gap-4 ml-6">
-            {/* LIVE badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald/10 border border-emerald/25">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-emerald">Live</span>
-            </div>
-
-            {/* Backend status */}
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium ${
-              isConnected
-                ? 'border-emerald/20 bg-emerald/8 text-emerald'
-                : 'border-coral/25 bg-coral/10 text-coral'
-            }`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald animate-pulse' : 'bg-coral'}`} />
-              Backend {isConnected ? 'Connected' : 'Offline'}
-            </div>
-
-            {/* Last updated */}
-            <span className="text-xs text-muted hidden lg:block">
-              Last updated: {lastUpdated}
-            </span>
-
+          <div className="flex items-center gap-3 ml-6">
             {/* Bell */}
             <button className="w-8 h-8 rounded-full bg-white/6 border border-white/8 flex items-center justify-center hover:bg-white/10 hover:border-violet/30 transition-all" aria-label="Notifications">
               <Bell size={14} className="text-muted" />
@@ -165,7 +144,7 @@ export function Layout() {
 
             {/* Avatar */}
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet to-cyan border border-violet/30 flex items-center justify-center text-xs font-bold text-ink cursor-pointer">
-              SP
+              ST
             </div>
           </div>
         </header>

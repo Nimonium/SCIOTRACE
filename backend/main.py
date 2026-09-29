@@ -103,6 +103,12 @@ class SingleEventIngestRequest(BaseModel):
 # Endpoints
 # ==========================================
 
+@app.get("/")
+def root():
+    """Root endpoint providing direct navigation."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/docs")
+
 @app.get("/api/v1/health")
 def health_check():
     """Health check endpoint for status validation."""
