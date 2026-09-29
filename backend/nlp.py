@@ -380,7 +380,7 @@ Return ONLY valid JSON matching this schema:
         logger.info(f"[NLP-ROUTE] GEMINI LIVE | Reason: {reason} | EstTokens: ~{est_tokens} | Content: '{text[:50]}...'")
 
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-3.8-flash',
             contents=prompt,
         )
         resp_text = response.text.strip()
@@ -469,7 +469,7 @@ Return ONLY valid JSON array with an object for each post:
         logger.info(f"[NLP-BATCH] Processing batch of {len(texts)} posts with Gemini | EstTokens: ~{est_tokens}")
 
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-3.8-flash',
             contents=prompt,
         )
         resp_text = response.text.strip()

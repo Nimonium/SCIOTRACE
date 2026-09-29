@@ -143,7 +143,7 @@ FACTS:
 - Core Claim: {dna['core_claim']}
 - Origin: {json.dumps(dna['origin'])}
 - Why Now / Triggers: {json.dumps(dna['why_now'])}
-- Momentum: {trend['momentum']}/100 (State: {trend['momentum_state']}, Breakout Probability: {trend['breakout_probability']})
+- Momentum: {trend.get('momentum', 0)}/100 (State: {trend.get('momentum_state', trend.get('state', 'active'))}, Breakout Probability: {trend.get('breakout_probability', 0.0)})
 - Overall Sentiment: {trend['sentiment']}
 - Key Graph Roles: Originators ({[n['id'] for n in graph['nodes'] if n['role'] == 'originator']}), Bridges ({[n['id'] for n in graph['nodes'] if n['role'] == 'bridge']}), Authorities ({[n['id'] for n in graph['nodes'] if n['role'] == 'authority']})
 - Forecast: Expected Reach: {dna['forecast']['expected_reach']}, Expected Duration: {dna['forecast']['expected_duration_hours']} hours

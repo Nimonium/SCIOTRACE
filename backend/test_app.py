@@ -14,7 +14,16 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def setup_test_data():
+def mock_gemini_offline(monkeypatch):
+    """
+    Ensure test suite runs 100% offline and deterministic without external API network latency.
+    """
+    monkeypatch.setattr("nlp._get_gemini_client", lambda: None)
+    monkeypatch.setattr("ask_service._get_gemini_client", lambda: None)
+
+
+@pytest.fixture(autouse=True)
+def setup_test_data(mock_gemini_offline):
     init_db()
     load_seed_data()
     batch_classify_and_update()

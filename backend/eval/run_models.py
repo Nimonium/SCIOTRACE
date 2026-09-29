@@ -73,10 +73,25 @@ Return ONLY valid JSON matching this schema:
   "emotion": "curiosity" | "excitement" | "anxiety" | "anger" | "fear" | "support" | "opposition" | "uncertainty" | "mobilization"
 }}
 """
-    response = client.models.generate_content(
-        model="gemini-3.5-flash",
-        contents=prompt
-    )
+    import time
+    last_err = None
+    for attempt in range(1, 4):
+        try:
+            response = client.models.generate_content(
+                model="gemini-3.8-flash",
+                contents=prompt
+            )
+            break
+        except Exception as e:
+            last_err = e
+            err_str = str(e)
+            is_unavailable = "503" in err_str or "UNAVAILABLE" in err_str or "high demand" in err_str.lower()
+            if attempt < 3 and is_unavailable:
+                print(f"      [Retry {attempt}/3] 503 UNAVAILABLE: waiting 5 seconds before retrying...")
+                time.sleep(5)
+                continue
+            raise e
+
     resp_text = response.text.strip()
     if resp_text.startswith("```json"):
         resp_text = resp_text[7:]
@@ -116,17 +131,27 @@ def run_models():
 
     print(f"Loaded {len(post_ids)} post IDs for evaluation.")
 
-    # 2. Fetch posts from DB
-    conn = get_db_connection()
-    c = conn.cursor()
-    placeholders = ",".join("?" for _ in post_ids)
-    rows = c.execute(f"SELECT id, content FROM events WHERE id IN ({placeholders})", post_ids).fetchall()
-    conn.close()
+    # 2. Fetch posts from label_sheet.csv (ground truth dataset) or DB
+    posts_by_id = {}
+    label_sheet_path = os.path.join(SCRIPT_DIR, "label_sheet.csv")
+    if not os.path.exists(label_sheet_path):
+        label_sheet_path = os.path.join(PROJECT_ROOT, "eval", "label_sheet.csv")
+    if os.path.exists(label_sheet_path):
+        with open(label_sheet_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for r in reader:
+                if r.get("post_id") and r.get("text"):
+                    posts_by_id[r["post_id"]] = r["text"]
 
-    posts_by_id = {r["id"]: r["content"] for r in rows}
     missing_ids = [pid for pid in post_ids if pid not in posts_by_id]
     if missing_ids:
-        print(f"[WARNING] {len(missing_ids)} post IDs not found in DB events table: {missing_ids}")
+        conn = get_db_connection()
+        c = conn.cursor()
+        placeholders = ",".join("?" for _ in missing_ids)
+        rows = c.execute(f"SELECT id, content FROM events WHERE id IN ({placeholders})", missing_ids).fetchall()
+        conn.close()
+        for r in rows:
+            posts_by_id[r["id"]] = r["content"]
 
     # 3. Check Gemini Client Availability
     gemini_client = get_gemini_client_strict()
@@ -144,7 +169,7 @@ def run_models():
 
     # 4. Classify each of the 30 posts
     predictions = []
-    gemini_halted = False
+    failed_posts = []
 
     for idx, pid in enumerate(post_ids, 1):
         text = posts_by_id.get(pid, "")
@@ -164,7 +189,7 @@ def run_models():
         gemini_emotion = ""
         gemini_call_ok = False
 
-        if gemini_available and not gemini_halted:
+        if gemini_available:
             try:
                 g_res = run_gemini_classification(gemini_client, clean_text)
                 gemini_sentiment = g_res["sentiment"]
@@ -172,11 +197,8 @@ def run_models():
                 gemini_call_ok = True
                 print(f"[{idx}/{len(post_ids)}] {pid}: Local=({local_sentiment}, {local_emotion}) | Gemini=({gemini_sentiment}, {gemini_emotion}) [OK]")
             except Exception as e:
-                print("\n" + "!" * 75)
-                print(f"[ERROR] Gemini API call failed for post {pid}: {e}")
-                print("Stopping further Gemini calls. Do NOT fall back to heuristic and label it Gemini.")
-                print("!" * 75 + "\n")
-                gemini_halted = True
+                failed_posts.append((pid, str(e)))
+                print(f"[{idx}/{len(post_ids)}] {pid}: Local=({local_sentiment}, {local_emotion}) | Gemini FAILED after 3 retries: {e}")
                 gemini_call_ok = False
         else:
             print(f"[{idx}/{len(post_ids)}] {pid}: Local=({local_sentiment}, {local_emotion}) | Gemini=(N/A - key missing) [gemini_call_ok=False]")
@@ -221,8 +243,14 @@ def run_models():
     print(f"Total posts evaluated: {len(predictions)}")
     print(f"Local classifications: {len(predictions)} / {len(predictions)} (100%)")
     print(f"Gemini live calls OK: {ok_count} / {len(predictions)}")
-    if ok_count < len(predictions):
-        print("[STATUS] Gemini calls incomplete. To run live Gemini evaluation, configure GEMINI_API_KEY in backend/.env and re-run.")
+    if failed_posts:
+        print("\n" + "!" * 75)
+        print(f"[FAILED POSTS] {len(failed_posts)} post(s) failed Gemini classification after retries:")
+        for f_pid, f_err in failed_posts:
+            print(f"  - {f_pid}: {f_err}")
+        print("!" * 75)
+    elif ok_count == len(predictions):
+        print("\n[SUCCESS] All 30 posts successfully classified by Gemini!")
 
 
 if __name__ == "__main__":
